@@ -1,0 +1,503 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Racha a Conta</title><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: comanda de bar. Formulário à esquerda, recibo "quanto cada um paga" à direita (empilha no celular). */
+:root {
+  --bg: #eef1ec;
+  --paper: #fbfcf9;
+  --fg: #18211c;
+  --muted: #5c6b62;
+  --line: #d3dbd3;
+  --bottle: #2c5a47;
+  --bottle-soft: #dbe8e0;
+  --amber: #b8730f;
+  --amber-soft: #f6e6c8;
+  --warn: #9a4a12;
+  --warn-soft: #fbe5d3;
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101613; --paper: #18201c; --fg: #e6ece7; --muted: #95a59b; --line: #2b3832;
+    --bottle: #7cc3a2; --bottle-soft: #1e3329; --amber: #eaa645; --amber-soft: #3a2b12;
+    --warn: #f0a46c; --warn-soft: #3b2214; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101613; --paper: #18201c; --fg: #e6ece7; --muted: #95a59b; --line: #2b3832;
+  --bottle: #7cc3a2; --bottle-soft: #1e3329; --amber: #eaa645; --amber-soft: #3a2b12;
+  --warn: #f0a46c; --warn-soft: #3b2214; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--f-body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 24px; }
+header h1 {
+  font-family: var(--f-display); font-stretch: 70%; font-weight: 800;
+  font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: .95; margin: 0; letter-spacing: -.01em;
+  text-wrap: balance;
+}
+header h1 span { color: var(--amber); }
+header p { margin: 8px 0 0; color: var(--muted); max-width: 60ch; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.col { display: grid; gap: 20px; min-width: 0; }
+
+section.block { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.block-head h2 { font-family: var(--f-display); font-stretch: 85%; font-weight: 700; font-size: 1.15rem; margin: 0; }
+.eyebrow { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+
+input, select, button { font: inherit; color: inherit; }
+input[type="text"], input[type="number"], select {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 7px;
+  padding: 8px 10px; min-width: 0; width: 100%;
+}
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+button { cursor: pointer; }
+.btn { border: 1px solid var(--line); background: var(--paper); border-radius: 999px; padding: 7px 14px; font-weight: 600; font-size: .9rem; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--bottle); border-color: var(--bottle); color: var(--paper); }
+.btn.ghost { background: transparent; }
+.x { border: none; background: transparent; color: var(--muted); width: 34px; height: 34px; border-radius: 7px; font-size: 1.1rem; line-height: 1; flex: none; }
+.x:hover { background: var(--bg); color: var(--warn); }
+
+/* Pessoas */
+.people { display: grid; gap: 8px; }
+.person { display: flex; gap: 8px; align-items: center; }
+.person input { flex: 1; }
+.drink {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--line); background: var(--bg); color: var(--muted);
+  border-radius: 999px; padding: 6px 12px; font-size: .85rem; font-weight: 600; white-space: nowrap;
+}
+.drink svg { width: 14px; height: 14px; }
+.drink[aria-pressed="true"] { background: var(--amber-soft); border-color: var(--amber); color: var(--amber); }
+
+/* Itens */
+.items-head, .item { display: grid; grid-template-columns: minmax(0, 1fr) 64px 96px 132px 34px; gap: 8px; align-items: center; }
+.items-head { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
+.items { display: grid; gap: 8px; }
+.item .qty { text-align: center; }
+.item .price { text-align: right; }
+@media (max-width: 560px) {
+  .items-head { display: none; }
+  .item { grid-template-columns: minmax(0, 1fr) 70px 34px; grid-template-areas: "name name x" "qty price price" "kind kind kind"; padding-bottom: 10px; border-bottom: 1px dashed var(--line); }
+  .item .iname { grid-area: name; } .item .qty { grid-area: qty; } .item .price { grid-area: price; }
+  .item .kind { grid-area: kind; } .item .x { grid-area: x; }
+}
+.kind.is-drink { border-color: var(--amber); color: var(--amber); }
+
+.subtotals { display: flex; gap: 18px; flex-wrap: wrap; font-size: .9rem; color: var(--muted); padding-top: 4px; border-top: 1px solid var(--line); }
+.subtotals b { color: var(--fg); font-weight: 600; }
+
+/* Taxas */
+.fees { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 480px) { .fees { grid-template-columns: minmax(0, 1fr); } }
+.field { display: grid; gap: 6px; }
+.field label { font-size: .85rem; font-weight: 600; }
+.suffix { display: flex; align-items: center; gap: 8px; }
+.suffix input { text-align: right; }
+.suffix span { color: var(--muted); font-size: .9rem; white-space: nowrap; }
+.check { display: inline-flex; align-items: center; gap: 8px; font-size: .9rem; }
+.check input { width: 18px; height: 18px; accent-color: var(--bottle); }
+.hint { font-size: .8rem; color: var(--muted); margin: 0; }
+
+/* Recibo */
+.receipt {
+  position: sticky; top: calc(16px + env(safe-area-inset-top, 0px));
+  background: var(--paper); border: 1px solid var(--line); border-radius: var(--r);
+  padding: 20px 18px 18px; display: grid; gap: 16px; min-width: 0;
+}
+.receipt::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -7px; height: 8px;
+  background: radial-gradient(circle at 6px -1px, transparent 6px, var(--paper) 6.5px) 0 0 / 12px 8px repeat-x;
+}
+@media (max-width: 820px) { .receipt { position: static; } }
+.total { display: grid; gap: 2px; padding-bottom: 14px; border-bottom: 2px dashed var(--line); }
+.total .big { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-size: 2.1rem; font-weight: 600; letter-spacing: -.02em; }
+.total .sub { color: var(--muted); font-size: .85rem; }
+.lines { display: grid; gap: 4px; font-size: .9rem; }
+.line { display: flex; justify-content: space-between; gap: 12px; }
+.line span:first-child { color: var(--muted); }
+
+.split { display: grid; gap: 0; }
+.share { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.share:first-child { border-top: none; }
+.share .who { font-weight: 600; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.share .who .n { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.share .amt { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-weight: 600; font-size: 1.1rem; text-align: right; }
+.share .det { grid-column: 1 / -1; font-size: .78rem; color: var(--muted); font-family: var(--f-mono); }
+.pill { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; padding: 2px 7px; border-radius: 999px; flex: none; }
+.pill.yes { background: var(--amber-soft); color: var(--amber); }
+.pill.no { background: var(--bottle-soft); color: var(--bottle); }
+
+.warn { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 10px 12px; font-size: .85rem; margin: 0; }
+.empty { color: var(--muted); font-size: .9rem; margin: 0; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.toast { font-size: .85rem; color: var(--bottle); font-weight: 600; }
+textarea.fallback { width: 100%; min-height: 120px; font-family: var(--f-mono); font-size: .8rem; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 7px; padding: 8px; }
+.confirm { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .85rem; }
+.pix-row { display:flex; gap:8px; align-items:center; }
+.pix-row .grow{flex:1;min-width:0}
+.share .cobrar { grid-column:1 / -1; justify-self:start; margin-top:6px; padding:5px 12px; font-size:.82rem; }
+footer { color: var(--muted); font-size: .8rem; text-align: center; }
+@media (prefers-reduced-motion: no-preference) { .share { transition: background .2s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Racha a <span>Conta</span></h1>
+    <p>Lance o que foi pedido, marque quem bebeu e veja quanto cada um paga. A bebida alcoólica é dividida só entre quem bebeu; a taxa de serviço entra proporcional ao consumo de cada um.</p>
+  </header>
+
+  <div class="grid">
+    <div class="col">
+      <section class="block" aria-labelledby="h-people">
+        <div class="block-head">
+          <h2 id="h-people">Quem está na mesa</h2>
+          <span class="eyebrow" id="people-count"></span>
+        </div>
+        <div class="people" id="people"></div>
+        <div class="actions"><button class="btn" id="add-person" type="button">+ Adicionar pessoa</button></div>
+      </section>
+
+      <section class="block" aria-labelledby="h-items">
+        <div class="block-head">
+          <h2 id="h-items">O que foi pedido</h2>
+          <span class="eyebrow">Valores em R$</span>
+        </div>
+        <div class="items-head" aria-hidden="true"><span>Item</span><span style="text-align:center">Qtd</span><span style="text-align:right">Preço un.</span><span>Divide entre</span><span></span></div>
+        <div class="items" id="items"></div>
+        <div class="actions">
+          <button class="btn" id="add-food" type="button">+ Item para todos</button>
+          <button class="btn" id="add-drink" type="button">+ Bebida alcoólica</button>
+        </div>
+        <div class="subtotals" id="subtotals"></div>
+      </section>
+
+      <section class="block" aria-labelledby="h-pix">
+        <div class="block-head"><h2 id="h-pix">Quem pagou a conta</h2></div>
+        <div class="fees">
+          <div class="field">
+            <label for="payer">Quem pagou</label>
+            <select id="payer"></select>
+          </div>
+          <div class="field">
+            <label for="pix">Chave Pix de quem pagou</label>
+            <input type="text" id="pix" autocomplete="off" placeholder="CPF, e-mail, celular ou chave aleatória">
+          </div>
+        </div>
+        <p class="hint">A cobrança de cada pessoa leva essa chave. Quem pagou não recebe cobrança.</p>
+      </section>
+
+      <section class="block" aria-labelledby="h-fees">
+        <div class="block-head"><h2 id="h-fees">Taxas</h2></div>
+        <div class="fees">
+          <div class="field">
+            <label for="service">Taxa de serviço</label>
+            <div class="suffix"><input type="text" inputmode="decimal" id="service" class="num"><span>%</span></div>
+            <label class="check" for="service-on"><input type="checkbox" id="service-on"> Cobrar taxa de serviço</label>
+          </div>
+          <div class="field">
+            <label for="couvert">Couvert artístico por pessoa</label>
+            <div class="suffix"><span>R$</span><input type="text" inputmode="decimal" id="couvert" class="num"></div>
+            <p class="hint">Valor fixo por cabeça. Fica fora da taxa de serviço.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="receipt" aria-labelledby="h-result" aria-live="polite">
+      <div class="total">
+        <span class="eyebrow" id="h-result">Total da conta</span>
+        <span class="big" id="grand">R$ 0,00</span>
+        <span class="sub" id="grand-sub"></span>
+      </div>
+      <div class="lines" id="lines"></div>
+      <div>
+        <div class="eyebrow" style="margin-bottom:4px">Quanto cada um paga</div>
+        <div class="split" id="split"></div>
+      </div>
+      <p class="warn" id="warn" hidden></p>
+      <div class="actions">
+        <button class="btn primary" id="copy" type="button">Copiar divisão</button>
+        <span class="toast" id="toast" hidden></span>
+      </div>
+      <textarea class="fallback" id="fallback" readonly hidden aria-label="Texto da divisão para copiar"></textarea>
+      <div class="actions" id="reset-zone">
+        <button class="btn ghost" id="reset" type="button">Começar conta nova</button>
+      </div>
+    </aside>
+  </div>
+  <footer>Os dados ficam salvos só neste navegador.</footer>
+</div>
+
+<script>
+(function () {
+  const KEY = "racha-a-conta-v1";
+  const BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  const fmt = c => BRL.format(c / 100);
+  let seq = 100;
+  const uid = () => "k" + (++seq) + Math.random().toString(36).slice(2, 6);
+
+  const EXAMPLE = () => ({
+    people: [
+      { id: uid(), name: "Ana", drinks: true },
+      { id: uid(), name: "Bruno", drinks: true },
+      { id: uid(), name: "Carla", drinks: false },
+      { id: uid(), name: "Diego", drinks: true },
+      { id: uid(), name: "Elisa", drinks: false }
+    ],
+    items: [
+      { id: uid(), name: "Porção de fritas com cheddar", qty: "2", price: "42,00", kind: "all" },
+      { id: uid(), name: "Bolinho de bacalhau (12 un.)", qty: "1", price: "58,90", kind: "all" },
+      { id: uid(), name: "Refrigerante lata", qty: "3", price: "7,50", kind: "all" },
+      { id: uid(), name: "Chopp 300 ml", qty: "9", price: "12,90", kind: "drink" },
+      { id: uid(), name: "Caipirinha de limão", qty: "2", price: "24,00", kind: "drink" }
+    ],
+    service: "10", serviceOn: true, couvert: "0,00", pix: "", payer: ""
+  });
+  const BLANK = () => ({
+    people: [{ id: uid(), name: "", drinks: true }, { id: uid(), name: "", drinks: true }],
+    items: [{ id: uid(), name: "", qty: "1", price: "", kind: "all" }],
+    service: "10", serviceOn: true, couvert: "0,00", pix: "", payer: ""
+  });
+
+  let state;
+  try { const raw = localStorage.getItem(KEY); state = raw ? JSON.parse(raw) : null; } catch (e) { state = null; }
+  if (!state || !Array.isArray(state.people) || !Array.isArray(state.items)) state = EXAMPLE();
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+
+  // "12,90" / "1.234,56" / "12.9" -> centavos
+  function toCents(v) {
+    let s = String(v ?? "").trim().replace(/[^\d.,-]/g, "");
+    if (!s) return 0;
+    if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+    const n = parseFloat(s);
+    return isFinite(n) && n > 0 ? Math.round(n * 100) : 0;
+  }
+  function toQty(v) { const n = parseFloat(String(v).replace(",", ".")); return isFinite(n) && n > 0 ? n : 0; }
+  function toPct(v) { const n = parseFloat(String(v).replace(",", ".")); return isFinite(n) && n > 0 ? n : 0; }
+
+  // Cálculo puro: tudo em centavos, arredondamento com distribuição do resto para fechar o total exato.
+  function calc(s) {
+    let shared = 0, drink = 0;
+    for (const it of s.items) {
+      const v = Math.round(toCents(it.price) * toQty(it.qty));
+      if (it.kind === "drink") drink += v; else shared += v;
+    }
+    const people = s.people;
+    const n = people.length;
+    const drinkers = people.filter(p => p.drinks).length;
+    const rate = s.serviceOn ? toPct(s.service) / 100 : 0;
+    const couvert = toCents(s.couvert);
+    const drinkFallback = drink > 0 && drinkers === 0;
+    const consumo = shared + drink;
+    const service = Math.round(consumo * rate);
+    const grand = consumo + service + couvert * n;
+    if (n === 0) return { shared, drink, consumo, service, couvert, grand, n, drinkers, rate, drinkFallback, shares: [] };
+
+    const raw = people.map(p => {
+      const sh = shared / n;
+      const dr = drinkFallback ? drink / n : (p.drinks ? drink / drinkers : 0);
+      const base = sh + dr;
+      return { p, sh, dr, sv: base * rate, cv: couvert, exact: base * (1 + rate) + couvert };
+    });
+    let floors = raw.map(r => Math.floor(r.exact + 1e-9));
+    let rest = grand - floors.reduce((a, b) => a + b, 0);
+    const order = raw.map((r, i) => [r.exact - Math.floor(r.exact + 1e-9), i]).sort((a, b) => b[0] - a[0]);
+    for (let k = 0; rest > 0 && k < order.length; k++, rest--) floors[order[k][1]]++;
+    const shares = raw.map((r, i) => ({ ...r, total: floors[i] }));
+    return { shared, drink, consumo, service, couvert, grand, n, drinkers, rate, drinkFallback, shares };
+  }
+
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const glass = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3.5 2.5h9l-1.2 11h-6.6z"/><path d="M4 6h8"/></svg>';
+  const nameOf = (p, i) => (p.name || "").trim() || "Pessoa " + (i + 1);
+
+  function renderPeople() {
+    $("people").innerHTML = state.people.map((p, i) => `
+      <div class="person" data-id="${p.id}">
+        <input type="text" id="p-${p.id}" data-f="name" value="${esc(p.name)}" placeholder="Pessoa ${i + 1}" aria-label="Nome da pessoa ${i + 1}">
+        <button type="button" class="drink" data-act="toggle" aria-pressed="${p.drinks}" title="Clique para alternar">${glass}${p.drinks ? "Bebeu" : "Não bebeu"}</button>
+        <button type="button" class="x" data-act="del" aria-label="Remover ${esc(nameOf(p, i))}">×</button>
+      </div>`).join("");
+  }
+  function renderItems() {
+    $("items").innerHTML = state.items.map((it, i) => `
+      <div class="item" data-id="${it.id}">
+        <input class="iname" type="text" id="i-${it.id}-name" data-f="name" value="${esc(it.name)}" placeholder="${it.kind === "drink" ? "Ex.: Chopp" : "Ex.: Porção de fritas"}" aria-label="Item ${i + 1}">
+        <input class="qty num" type="text" inputmode="decimal" id="i-${it.id}-qty" data-f="qty" value="${esc(it.qty)}" aria-label="Quantidade do item ${i + 1}">
+        <input class="price num" type="text" inputmode="decimal" id="i-${it.id}-price" data-f="price" value="${esc(it.price)}" placeholder="0,00" aria-label="Preço unitário do item ${i + 1}">
+        <select class="kind ${it.kind === "drink" ? "is-drink" : ""}" id="i-${it.id}-kind" data-f="kind" aria-label="Quem divide o item ${i + 1}">
+          <option value="all"${it.kind === "all" ? " selected" : ""}>Todos</option>
+          <option value="drink"${it.kind === "drink" ? " selected" : ""}>Só quem bebeu</option>
+        </select>
+        <button type="button" class="x" data-act="del" aria-label="Remover item ${i + 1}">×</button>
+      </div>`).join("");
+  }
+  function renderPayer() {
+    const sel = $("payer");
+    if (state.payer && !state.people.some(p => p.id === state.payer)) state.payer = "";
+    sel.innerHTML = `<option value="">Ninguém selecionado</option>` + state.people.map((p, i) =>
+      `<option value="${p.id}"${p.id === state.payer ? " selected" : ""}>${esc(nameOf(p, i))}</option>`).join("");
+  }
+  function renderFees() {
+    $("pix").value = state.pix || "";
+    $("service").value = state.service;
+    $("service-on").checked = !!state.serviceOn;
+    $("couvert").value = state.couvert;
+  }
+
+  let lastText = "";
+  let lastShares = [];
+  function renderResult() {
+    const r = calc(state);
+    const pct = String(toPct(state.service)).replace(".", ",");
+    $("people-count").textContent = r.n === 1 ? "1 pessoa" : r.n + " pessoas" + (r.n ? " · " + r.drinkers + " bebe" + (r.drinkers === 1 ? "" : "m") : "");
+    $("subtotals").innerHTML = `<span>Para todos <b class="num">${fmt(r.shared)}</b></span><span>Só quem bebeu <b class="num">${fmt(r.drink)}</b></span>`;
+    $("grand").textContent = fmt(r.grand);
+    $("grand-sub").textContent = r.rate ? `com ${pct}% de serviço` : "sem taxa de serviço";
+    $("lines").innerHTML =
+      `<div class="line"><span>Consumo</span><span class="num">${fmt(r.consumo)}</span></div>` +
+      (r.rate ? `<div class="line"><span>Serviço (${pct}%)</span><span class="num">${fmt(r.service)}</span></div>` : "") +
+      (r.couvert ? `<div class="line"><span>Couvert (${r.n} × ${fmt(r.couvert)})</span><span class="num">${fmt(r.couvert * r.n)}</span></div>` : "");
+
+    if (!r.n) {
+      $("split").innerHTML = `<p class="empty">Adicione pelo menos uma pessoa para dividir.</p>`;
+    } else {
+      $("split").innerHTML = r.shares.map((s, i) => {
+        const bits = [`comum ${fmt(Math.round(s.sh))}`];
+        if (s.dr) bits.push(`bebida ${fmt(Math.round(s.dr))}`);
+        if (r.rate) bits.push(`serviço ${fmt(Math.round(s.sv))}`);
+        if (s.cv) bits.push(`couvert ${fmt(s.cv)}`);
+        return `<div class="share"><span class="who"><span class="n">${esc(nameOf(s.p, i))}</span><span class="pill ${s.p.drinks ? "yes" : "no"}">${s.p.drinks ? "bebeu" : "não bebeu"}</span></span><span class="amt">${fmt(s.total)}</span><span class="det">${bits.join(" · ")}</span>${s.p.id === state.payer ? "" : `<button type="button" class="btn cobrar" data-cobrar="${i}">Copiar cobrança</button>`}</div>`;
+      }).join("");
+    }
+    const w = $("warn");
+    if (r.drinkFallback) { w.hidden = false; w.textContent = "Tem bebida alcoólica na conta, mas ninguém está marcado como quem bebeu. Por enquanto ela foi dividida entre todos."; }
+    else w.hidden = true;
+
+    lastText = "🍺 Divisão da conta\n" +
+      r.shares.map((s, i) => `${nameOf(s.p, i)}: ${fmt(s.total)}`).join("\n") +
+      `\n\nTotal: ${fmt(r.grand)}` + (r.rate ? ` (com ${pct}% de serviço)` : "") +
+      (r.couvert ? `\nInclui couvert de ${fmt(r.couvert)} por pessoa` : "");
+    lastShares = r.shares.map((s, i) => ({ id: s.p.id, nome: nameOf(s.p, i), total: s.total }));
+    save();
+  }
+
+  function renderAll() { renderPeople(); renderPayer(); renderItems(); renderFees(); renderResult(); }
+
+  // Eventos
+  $("people").addEventListener("input", e => {
+    const row = e.target.closest(".person"); if (!row) return;
+    const p = state.people.find(x => x.id === row.dataset.id); if (!p) return;
+    p.name = e.target.value; renderResult(); renderPayer();
+  });
+  $("people").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-act]"); if (!btn) return;
+    const id = btn.closest(".person").dataset.id;
+    if (btn.dataset.act === "toggle") { const p = state.people.find(x => x.id === id); p.drinks = !p.drinks; }
+    else state.people = state.people.filter(x => x.id !== id);
+    renderPeople(); renderPayer(); renderResult();
+    if (btn.dataset.act === "toggle") { const b = document.querySelector(`.person[data-id="${id}"] .drink`); b && b.focus(); }
+  });
+  $("items").addEventListener("input", e => {
+    const row = e.target.closest(".item"); if (!row) return;
+    const it = state.items.find(x => x.id === row.dataset.id); if (!it) return;
+    it[e.target.dataset.f] = e.target.value;
+    if (e.target.dataset.f === "kind") e.target.classList.toggle("is-drink", it.kind === "drink");
+    renderResult();
+  });
+  $("items").addEventListener("click", e => {
+    const btn = e.target.closest("button[data-act=del]"); if (!btn) return;
+    const id = btn.closest(".item").dataset.id;
+    state.items = state.items.filter(x => x.id !== id);
+    renderItems(); renderResult();
+  });
+  function addItem(kind) {
+    const it = { id: uid(), name: "", qty: "1", price: "", kind };
+    state.items.push(it); renderItems(); renderResult();
+    $("i-" + it.id + "-name").focus();
+  }
+  $("add-food").addEventListener("click", () => addItem("all"));
+  $("add-drink").addEventListener("click", () => addItem("drink"));
+  $("add-person").addEventListener("click", () => {
+    const p = { id: uid(), name: "", drinks: true };
+    state.people.push(p); renderPeople(); renderPayer(); renderResult();
+    $("p-" + p.id).focus();
+  });
+  $("service").addEventListener("input", e => { state.service = e.target.value; renderResult(); });
+  $("service-on").addEventListener("change", e => { state.serviceOn = e.target.checked; renderResult(); });
+  $("couvert").addEventListener("input", e => { state.couvert = e.target.value; renderResult(); });
+
+  function cobranca(sh) {
+    const pagador = state.people.find(p => p.id === state.payer);
+    const i = state.people.indexOf(pagador);
+    const quem = pagador ? nameOf(pagador, i) : "";
+    const pix = (state.pix || "").trim();
+    return `Oi, ${sh.nome}! Fechamos a conta do bar${quem ? " e " + quem + " pagou tudo" : ""}. A sua parte deu ${fmt(sh.total)}.` +
+      (pix ? `\n\nPode mandar por Pix para a chave:\n${pix}` : "\n\nMe manda por Pix quando puder.") +
+      `\n\nObrigado! 🍻`;
+  }
+  $("split").addEventListener("click", e => {
+    const b = e.target.closest("button[data-cobrar]"); if (!b) return;
+    const sh = lastShares[+b.dataset.cobrar]; if (!sh) return;
+    const txt = cobranca(sh);
+    const fb = $("fallback");
+    const fallback = () => { fb.value = txt; fb.hidden = false; fb.focus(); fb.select(); toast("Selecione o texto abaixo e copie"); };
+    try {
+      navigator.clipboard.writeText(txt).then(() => { fb.hidden = true; toast("Cobrança de " + sh.nome + " copiada."); }, fallback);
+    } catch (err) { fallback(); }
+  });
+  $("pix").addEventListener("input", e => { state.pix = e.target.value; save(); });
+  $("payer").addEventListener("change", e => { state.payer = e.target.value; renderResult(); });
+
+  let toastT;
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2500); }
+  $("copy").addEventListener("click", () => {
+    const fb = $("fallback");
+    const fallback = () => { fb.value = lastText; fb.hidden = false; fb.focus(); fb.select(); toast("Selecione o texto abaixo e copie"); };
+    try {
+      navigator.clipboard.writeText(lastText).then(() => { fb.hidden = true; toast("Copiado. É só colar no grupo."); }, fallback);
+    } catch (e) { fallback(); }
+  });
+
+  // Confirmação inline para zerar
+  $("reset-zone").addEventListener("click", e => {
+    const act = e.target.closest("button")?.dataset.act || (e.target.id === "reset" ? "ask" : null);
+    const z = $("reset-zone");
+    if (act === "ask") {
+      z.innerHTML = `<div class="confirm"><span>Apagar esta conta?</span><button class="btn" type="button" data-act="blank">Conta em branco</button><button class="btn" type="button" data-act="example">Carregar exemplo</button><button class="btn ghost" type="button" data-act="cancel">Cancelar</button></div>`;
+      return;
+    }
+    if (act === "blank") state = BLANK();
+    if (act === "example") state = EXAMPLE();
+    if (act) {
+      z.innerHTML = `<button class="btn ghost" id="reset" type="button">Começar conta nova</button>`;
+      if (act !== "cancel") renderAll();
+    }
+  });
+
+  renderAll();
+  window.__calc = calc; window.__toCents = toCents;
+})();
+</script>
+
+
+</body></html>
